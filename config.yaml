@@ -1,0 +1,6 @@
+config:
+  serviceConfig:
+    htmlServerConfig:
+      Addr: 3333
+      ReadTimeout: 55000000000
+      WriteTimeout: 55000000000
