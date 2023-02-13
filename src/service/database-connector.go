@@ -10,9 +10,15 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// TODO: Make it clear that it is the caller's responsiblity to call defer db.Close() when using this method.
-//func Connect(host string, port int, user string, password string, dbname string) (*sql.DB, error) {
-func Connect(databaseConfig configuration.DatabaseConfig) (*sql.DB, error) {
+type Connection struct {
+	Database *sql.DB
+	Err error
+}
+
+// TODO: Make it clear that it is the caller's responsiblity to call defer database.Close() when using this method.
+func Connect(databaseConfig configuration.DatabaseConfig) Connection {
+	var connection Connection;
+
 	host     := databaseConfig.Host
 	port     := databaseConfig.Port
 	user     := databaseConfig.User
@@ -25,29 +31,31 @@ func Connect(databaseConfig configuration.DatabaseConfig) (*sql.DB, error) {
 
 	fmt.Println(psqlInfo)
 
-	db, connectionError := sql.Open("postgres", psqlInfo)
+	connection.Database, connection.Err = sql.Open("postgres", psqlInfo)
 
-	if connectionError != nil {
+	if connection.Err != nil {
 		// TODO: Properly log this error.
 		fmt.Println("Failed to connect to the database. Cannot continue.")
-		panic(connectionError)
+		panic(connection.Err)
 	}
+
 	/*
 	 * It is vitally important that you call the Ping() method becuase the sql.Open() function
 	 * call does not ever create a connection to the database. Instead, it simply validates the arguments provided.
 	 */
-	connectionError = db.Ping()
+	 connection.Err = connection.Database.Ping()
 
-	if connectionError != nil {
-	  panic(connectionError)
+	if connection.Err != nil {
+	  panic(connection.Err)
 	}
   
 	fmt.Println("Successfully connected!")
-	return db, nil;
+	return connection
 }
 
-func QueryUsers(db *sql.DB) {
-	rows, queryError := db.Query("SELECT * from users;")
+func (c Connection) QueryUsers() {
+	// TODO: Determine if we should check for errors first or just warn the users they need to do that between calls to Connect() and QueryUsers().
+	rows, queryError := c.Database.Query("SELECT * from users;")
 
 	if queryError != nil {
 		fmt.Println("Failed to query database for users. Cannot continue");

@@ -46,14 +46,14 @@ func main() {
 	databaseConfig.Password= "password"
 	databaseConfig.DBname= "golang-db"
 
-	db, connectionError := connector.Connect(databaseConfig);
+	var connection connector.Connection = connector.Connect(databaseConfig);
 
-	if( connectionError != nil) {
+	if connection.Err != nil {
 		// TODO: Handle this error here.
 	}
 
-	defer db.Close();
-	connector.QueryUsers(db);
+	defer connection.Database.Close();
+	connection.QueryUsers();
 
 
 	// set up the service from config
