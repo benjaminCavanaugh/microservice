@@ -1,6 +1,16 @@
 package config
 
-var fileName string
+import (
+	"fmt"
+	"io/ioutil"
+	"time"
+
+	"gopkg.in/yaml.v2"
+)
+
+func HelloWorld() {
+	fmt.Println("Hello World!");
+}
 
 type Config struct {
 	serviceConfig ServiceConfig
@@ -11,12 +21,29 @@ func NewConfig() Config {
 	return c;
 }
 
-func (c Config) ParseFromFile() {
-	// TODO: Write a function for parsing a configuration YAML
+func ParseFromFile(filename string) (*Config, error) {
+    buf, err := ioutil.ReadFile(filename)
+
+	if err != nil {
+        return nil, err
+    }
+
+    c := &Config{}
+    err = yaml.Unmarshal(buf, c)
+
+	if err != nil {
+        return nil, fmt.Errorf("in file %q: %w", filename, err)
+    }
+
+    return c, err
 }
 
-func (c Config) GetConfig() ServiceConfig {
-	return c.serviceConfig
+func (c Config) GetServiceConfig() (ServiceConfig, error) {
+	// if c.serviceConfig == nil {
+	// 	return nil, error.Error()
+	// }
+
+	return c.serviceConfig, nil
 }
 
 type ServiceConfig struct {
@@ -34,8 +61,8 @@ func (s ServiceConfig) GetHtmlServerConfig() HtmlServerConfig {
 
 type HtmlServerConfig struct {
 	Addr         string
-	ReadTimeout  string
-	WriteTimeout string
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
 }
 
 func NewHtmlServerConfig() HtmlServerConfig {

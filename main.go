@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -11,13 +10,16 @@ import (
 	"syscall"
 	"time"
 
-	"gopkg.in/yaml.v2"
+	helper "microservice/src/config"
+	handler "microservice/src/handler"
 )
 
 func main() {
+	helper.HelloWorld();
+	
 	fileName := "config.yaml";
 	// TODO: Error handling here.
-	config, _ := ParseFromFile(fileName)
+	config, _ := helper.ParseFromFile(fileName)
 	fmt.Println(config);
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -42,7 +44,7 @@ func main() {
 	// var readTimeout time.Duration = htmlServerConfig.ReadTimeout * time.Second
 	// var writeTimeout time.Duration = htmlServerConfig.WriteTimeout * time.Second
 
-	var handler helloWorldhandler
+	var handler handler.HelloWorldhandler
 	
 	htmlServer := &http.Server{
 		Addr:         address,
@@ -77,90 +79,4 @@ func main() {
 				log.Print(err)
 			}
 	}
-}
-
-
-
-
-/*
-
-Contents from config.go.
-These are here because I was unable to get importing working.
-
-*/
-
-//var fileName string
-
-type Config struct {
-	serviceConfig ServiceConfig
-}
-
-func NewConfig() Config {
-	var c Config;
-	return c;
-}
-
-func ParseFromFile(filename string) (*Config, error) {
-    buf, err := ioutil.ReadFile(filename)
-
-	if err != nil {
-        return nil, err
-    }
-
-    c := &Config{}
-    err = yaml.Unmarshal(buf, c)
-
-	if err != nil {
-        return nil, fmt.Errorf("in file %q: %w", filename, err)
-    }
-
-    return c, err
-}
-
-func (c Config) GetServiceConfig() (ServiceConfig, error) {
-	// if c.serviceConfig == nil {
-	// 	return nil, error.Error()
-	// }
-
-	return c.serviceConfig, nil
-}
-
-type ServiceConfig struct {
-	htmlServerConfig HtmlServerConfig
-}
-
-func NewServiceConfig() ServiceConfig {
-	var s ServiceConfig;
-	return s;
-}
-
-func (s ServiceConfig) GetHtmlServerConfig() HtmlServerConfig {
-	return s.htmlServerConfig;
-}
-
-type HtmlServerConfig struct {
-	Addr         string
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
-}
-
-func NewHtmlServerConfig() HtmlServerConfig {
-	var h HtmlServerConfig;
-	return h;
-}
-
-
-/*
-
-Contents from handler.go.
-These are here because I was unable to get importing working.
-
-*/
-
-type helloWorldhandler struct {
-	message string
-}
-
-func (s helloWorldhandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-     fmt.Fprintf(w, "HeloWorld")
 }
