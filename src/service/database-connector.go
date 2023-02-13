@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	configuration "microservice/src/config"
 
@@ -53,32 +54,35 @@ func Connect(databaseConfig configuration.DatabaseConfig) Connection {
 	return connection
 }
 
-func (c Connection) QueryUsers() {
+func (c Connection) QueryUsers() string {
+	var builder strings.Builder;
 	// TODO: Determine if we should check for errors first or just warn the users they need to do that between calls to Connect() and QueryUsers().
 	rows, queryError := c.Database.Query("SELECT * from users;")
 
 	if queryError != nil {
-		fmt.Println("Failed to query database for users. Cannot continue");
+		builder.WriteString("Failed to query database for users. Cannot continue\n");
 		panic(queryError);
     }
 
 	defer rows.Close()
 
-	fmt.Println("Values from the users table:");
+	builder.WriteString("Values from the users table:\n");
 
 	// Loop through rows, using Scan to assign column data to struct fields.
     for rows.Next() {
 		var username, location, dateOfBirth string
 
 		if scanError := rows.Scan(&username, &location, &dateOfBirth); scanError != nil {
-			fmt.Println("Encountered an error when processing query results.")
+			builder.WriteString("Encountered an error when processing query results.\n")
 			continue;
         }
 
-		fmt.Printf("username: %v, date of birth: %v, location: %v\n", username, location, dateOfBirth)
+		builder.WriteString(fmt.Sprintf("username: %v, date of birth: %v, location: %v\n", username, location, dateOfBirth))
     }
 
 	if rowError := rows.Err(); rowError != nil {
-		fmt.Println("Error processing query results.")
+		builder.WriteString("Error processing query results.\n")
     }
+
+	return builder.String();
 }

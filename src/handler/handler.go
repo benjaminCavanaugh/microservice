@@ -1,21 +1,29 @@
 package handler
 
 import (
-	"database/sql"
 	"fmt"
+	connector "microservice/src/service"
 	"net/http"
 )
 
-var database *sql.DB;
 
 type HelloWorldhandler struct {
 	message string
+	connection connector.Connection;
 }
 
-func NewHandler(db *sql.DB) {
-	database = db;
+func NewHandler(connection connector.Connection) HelloWorldhandler {
+	var handler HelloWorldhandler;
+	handler.connection = connection;
+	return handler;
 }
 
 func (s HelloWorldhandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-     fmt.Fprintf(w, "HeloWorld")
+    fmt.Fprintf(w, "HeloWorld\n");
+
+	if s.connection.Database != nil {
+		fmt.Fprintf(w, s.connection.QueryUsers());
+	} else {
+		fmt.Fprintf(w, "The database connection was unusable.\n");
+	}
 }

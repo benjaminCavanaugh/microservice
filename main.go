@@ -16,12 +16,10 @@ import (
 )
 
 func main() {
-	configuration.HelloWorld();
-	
 	fileName := "config.yaml";
 	// TODO: Error handling here.
 	config, _ := configuration.ParseFromFile(fileName)
-	fmt.Println(config);
+	fmt.Printf("Full yaml.conf file:\n%v\n", config);
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -53,7 +51,7 @@ func main() {
 	}
 
 	defer connection.Database.Close();
-	connection.QueryUsers();
+	fmt.Println(connection.QueryUsers());
 
 
 	// set up the service from config
@@ -69,7 +67,7 @@ func main() {
 	// var readTimeout time.Duration = htmlServerConfig.ReadTimeout * time.Second
 	// var writeTimeout time.Duration = htmlServerConfig.WriteTimeout * time.Second
 
-	var handler handler.HelloWorldhandler
+	handler := handler.NewHandler(connection);
 	
 	htmlServer := &http.Server{
 		Addr:         address,

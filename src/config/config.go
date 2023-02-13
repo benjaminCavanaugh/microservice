@@ -8,10 +8,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func HelloWorld() {
-	fmt.Println("Hello World!");
-}
-
 type Config struct {
 	serviceConfig ServiceConfig
 }
