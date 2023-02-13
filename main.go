@@ -12,10 +12,20 @@ import (
 
 	helper "microservice/src/config"
 	handler "microservice/src/handler"
+	connector "microservice/src/service"
 )
 
 func main() {
 	helper.HelloWorld();
+
+	db, connectionError := connector.Connect();
+
+	if( connectionError != nil) {
+		// TODO: Handle this error here.
+	}
+
+	defer db.Close();
+	connector.QueryUsers(db);
 	
 	fileName := "config.yaml";
 	// TODO: Error handling here.
