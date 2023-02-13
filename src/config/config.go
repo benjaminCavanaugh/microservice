@@ -48,6 +48,7 @@ func (c Config) GetServiceConfig() (ServiceConfig, error) {
 
 type ServiceConfig struct {
 	htmlServerConfig HtmlServerConfig
+	databaseConfig DatabaseConfig
 }
 
 func NewServiceConfig() ServiceConfig {
@@ -59,6 +60,10 @@ func (s ServiceConfig) GetHtmlServerConfig() HtmlServerConfig {
 	return s.htmlServerConfig;
 }
 
+func (s ServiceConfig) GetDatabaseConfig() DatabaseConfig {
+	return s.databaseConfig;
+}
+
 type HtmlServerConfig struct {
 	Addr         string
 	ReadTimeout  time.Duration
@@ -68,4 +73,17 @@ type HtmlServerConfig struct {
 func NewHtmlServerConfig() HtmlServerConfig {
 	var h HtmlServerConfig;
 	return h;
+}
+
+type DatabaseConfig struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+	DBname   string
+}
+
+func NewDatabaseConfig() DatabaseConfig {
+	var d DatabaseConfig;
+	return d;
 }

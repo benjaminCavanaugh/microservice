@@ -17,15 +17,6 @@ import (
 
 func main() {
 	helper.HelloWorld();
-
-	db, connectionError := connector.Connect();
-
-	if( connectionError != nil) {
-		// TODO: Handle this error here.
-	}
-
-	defer db.Close();
-	connector.QueryUsers(db);
 	
 	fileName := "config.yaml";
 	// TODO: Error handling here.
@@ -42,9 +33,36 @@ func main() {
 
   	// TODO: set up logging
 
+
+	// Connect to the database.
+
+	databaseConfig := serviceConfig.GetDatabaseConfig()
+	fmt.Printf("Database config:\n%v\n", databaseConfig);
+	// FIXME: Make this use the values read-in from the DatabaseConfig instead of hard-coding them here.
+	host     := "localhost"
+	port     := 5432
+	user     := "postgres"
+	password := "password"
+	dbname   := "golang-db"
+	// host     := databaseConfig.Host
+	// port     := databaseConfig.Port
+	// user     := databaseConfig.User
+	// password := databaseConfig.Password
+	// dbname   := databaseConfig.DBName
+	db, connectionError := connector.Connect(host, port, user, password, dbname);
+
+	if( connectionError != nil) {
+		// TODO: Handle this error here.
+	}
+
+	defer db.Close();
+	connector.QueryUsers(db);
+
+
 	// set up the service from config
+
 	htmlServerConfig := serviceConfig.GetHtmlServerConfig()
-	fmt.Println(htmlServerConfig);
+	fmt.Printf("Server config:\n%v\n", htmlServerConfig);
 
 	// FIXME: Make this use the values read-in from the HtmlServerConfig instead of hard-coding them here.
 	address := "localhost:3333"
