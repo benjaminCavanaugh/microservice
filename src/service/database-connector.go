@@ -4,12 +4,21 @@ import (
 	"database/sql"
 	"fmt"
 
+	configuration "microservice/src/config"
+
 	// Bringing this in for the drivers.
 	_ "github.com/lib/pq"
 )
 
 // TODO: Make it clear that it is the caller's responsiblity to call defer db.Close() when using this method.
-func Connect(host string, port int, user string, password string, dbname string) (*sql.DB, error) {
+//func Connect(host string, port int, user string, password string, dbname string) (*sql.DB, error) {
+func Connect(databaseConfig configuration.DatabaseConfig) (*sql.DB, error) {
+	host     := databaseConfig.Host
+	port     := databaseConfig.Port
+	user     := databaseConfig.User
+	password := databaseConfig.Password
+	dbname   := databaseConfig.DBname
+	
 	// TODO: Refactor this to enable sslmode.
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)

@@ -10,17 +10,17 @@ import (
 	"syscall"
 	"time"
 
-	helper "microservice/src/config"
+	configuration "microservice/src/config"
 	handler "microservice/src/handler"
 	connector "microservice/src/service"
 )
 
 func main() {
-	helper.HelloWorld();
+	configuration.HelloWorld();
 	
 	fileName := "config.yaml";
 	// TODO: Error handling here.
-	config, _ := helper.ParseFromFile(fileName)
+	config, _ := configuration.ParseFromFile(fileName)
 	fmt.Println(config);
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -38,18 +38,15 @@ func main() {
 
 	databaseConfig := serviceConfig.GetDatabaseConfig()
 	fmt.Printf("Database config:\n%v\n", databaseConfig);
+
 	// FIXME: Make this use the values read-in from the DatabaseConfig instead of hard-coding them here.
-	host     := "localhost"
-	port     := 5432
-	user     := "postgres"
-	password := "password"
-	dbname   := "golang-db"
-	// host     := databaseConfig.Host
-	// port     := databaseConfig.Port
-	// user     := databaseConfig.User
-	// password := databaseConfig.Password
-	// dbname   := databaseConfig.DBName
-	db, connectionError := connector.Connect(host, port, user, password, dbname);
+	databaseConfig.Host= "localhost"
+	databaseConfig.Port= 5432
+	databaseConfig.User= "postgres"
+	databaseConfig.Password= "password"
+	databaseConfig.DBname= "golang-db"
+
+	db, connectionError := connector.Connect(databaseConfig);
 
 	if( connectionError != nil) {
 		// TODO: Handle this error here.
