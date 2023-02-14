@@ -4,3 +4,9 @@ config:
       Addr: 3333
       ReadTimeout: 55000000000
       WriteTimeout: 55000000000
+    databaseConfig:
+      Host: localhost
+      Port: 3333
+      User: postgres
+      Password: password
+      DBname: golang-db

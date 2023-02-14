@@ -19,10 +19,9 @@ func NewHandler(connection connector.Connection) HelloWorldhandler {
 }
 
 func (s HelloWorldhandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "HeloWorld\n");
-
 	if s.connection.Database != nil {
-		fmt.Fprintf(w, s.connection.QueryUsers());
+		// TODO: Expand this to accept query params and use them to populate the SQL query.
+		fmt.Fprintf(w, s.connection.QueryUsers().String());
 	} else {
 		fmt.Fprintf(w, "The database connection was unusable.\n");
 	}

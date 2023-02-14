@@ -2,8 +2,8 @@ package service
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
-	"strings"
 
 	configuration "microservice/src/config"
 
@@ -54,35 +54,78 @@ func Connect(databaseConfig configuration.DatabaseConfig) Connection {
 	return connection
 }
 
-func (c Connection) QueryUsers() string {
-	var builder strings.Builder;
+type QueryResult struct {
+	Success bool
+	Message string
+	Values []string
+}
+
+func (q QueryResult) String() string {
+	b, err := json.Marshal(q)
+
+	if err != nil {
+		return "Error processing query results."
+	}
+
+	return string(b)
+}
+
+func (c Connection) userQuery(queryString string, queryParams ... string) QueryResult {
+	var results QueryResult
+	results.Success = true;
+	var rows *sql.Rows
+	var queryError error
+
 	// TODO: Determine if we should check for errors first or just warn the users they need to do that between calls to Connect() and QueryUsers().
-	rows, queryError := c.Database.Query("SELECT * from users;")
+
+	if queryParams != nil || len(queryParams) <= 0 {
+		// Before a slice of parameters can be supplied to *sql.DB.Query they must be converted to the "any" type.
+		params := make([]any, len(queryParams));
+
+		for index, current := range queryParams {
+			params[index] = any(current);
+		}
+
+		rows, queryError = c.Database.Query(queryString, params...);
+	} else {
+		rows, queryError = c.Database.Query(queryString);
+	}
 
 	if queryError != nil {
-		builder.WriteString("Failed to query database for users. Cannot continue\n");
-		panic(queryError);
+		results.Success = false;
+		results.Message = "Failed to query database for users. Cannot continue";
+		fmt.Println(queryError)
+		return results;
     }
 
 	defer rows.Close()
 
-	builder.WriteString("Values from the users table:\n");
+	results.Message = "users";
 
 	// Loop through rows, using Scan to assign column data to struct fields.
     for rows.Next() {
 		var username, location, dateOfBirth string
 
 		if scanError := rows.Scan(&username, &location, &dateOfBirth); scanError != nil {
-			builder.WriteString("Encountered an error when processing query results.\n")
+			results.Values = append(results.Values, "Encountered an error when processing query results.")
 			continue;
         }
 
-		builder.WriteString(fmt.Sprintf("username: %v, date of birth: %v, location: %v\n", username, location, dateOfBirth))
+		results.Values = append(results.Values, fmt.Sprintf("username: %v, date of birth: %v, location: %v", username, location, dateOfBirth))
     }
 
 	if rowError := rows.Err(); rowError != nil {
-		builder.WriteString("Error processing query results.\n")
+		results.Success = false;
+		results.Message = "Error processing query results."
     }
 
-	return builder.String();
+	return results;
+}
+
+func (c Connection) QueryUsers() QueryResult {
+	return c.userQuery("SELECT * from users;");
+}
+
+func (c Connection) QueryUsersByName(userName string) QueryResult {
+	return c.userQuery("SELECT * from users WHERE username = $1;", userName);
 }

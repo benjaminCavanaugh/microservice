@@ -51,7 +51,7 @@ func main() {
 	}
 
 	defer connection.Database.Close();
-	fmt.Println(connection.QueryUsers());
+	fmt.Println(connection.QueryUsersByName("a"));
 
 
 	// set up the service from config
