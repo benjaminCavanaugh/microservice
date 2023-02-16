@@ -111,16 +111,15 @@ func userQuery[d dbModel.DbValue](c Connection, queryString string, queryParams 
 
 	for index, currentPointer := range usersFound {
 		fmt.Printf("\nusersFoundIndex: %v\n", index);
-
-		// Here we are using a type assertion to convert currentResult back into a User.
-		currentResult, ok := currentPointer.(*dbModel.User);
+		currentResult, ok := currentPointer, true;
 
 		fmt.Printf("Current value before conversion: %v\nCurrent value after conversion: %v\nConversion was successful:%v\n",
 			currentPointer, currentResult, ok);
 
 		if ok {
-			results.Values = append(results.Values, fmt.Sprintf("username: %v, date of birth: %v, location: %v",
-				currentResult.Username, currentResult.Location, currentResult.Dob))
+			// Note, because the type "d" is only required to implement "dbModel.DbValue" this statement does not work as it is.
+			// results.Values = append(results.Values, fmt.Sprintf("username: %v, date of birth: %v, location: %v",
+			// 	currentResult.Username, currentResult.Location, currentResult.Dob))
 		} else {
 			// TODO: Convert this to use the generic type's name.
 			fmt.Printf("Error. Failed to convert result %v to the type %v\n", currentPointer, "d")
@@ -130,24 +129,24 @@ func userQuery[d dbModel.DbValue](c Connection, queryString string, queryParams 
 	return results;
 }
 
-//func parseResults[d dbModel.DbValue](rows *sql.Rows) []d {
-func parseResults[d dbModel.DbValue](rows *sql.Rows) []dbModel.DbValue {
-	usersFound := make([]dbModel.DbValue, 0);
-	index := 0;
+func parseResults[d dbModel.DbValue](rows *sql.Rows) []d {
+	usersFound := make([]d, 0);
 
 	// Loop through rows, using Scan to assign column data to struct fields.
     for rows.Next() {
 		var currentUser d;
-		success := currentUser.ScanRow(rows, index, &usersFound);
+
+		// This uses the implementation of ScanRow that accepts a pointer to currentUser and directly modifies it.
+		success := (*currentUser).ScanRow(rows);
 
 		fmt.Printf("The query was successful: %v\n", success);
-		fmt.Printf("The length of the slice is: %v\n", len(usersFound));
-		fmt.Printf("The current user returned by the query is: %v\n", usersFound[index]);
-		index++;
+		fmt.Printf("The user struct after it was updated was: %v\n", currentUser);
 
 		if success == false {
 			fmt.Println("Encountered an error when processing query results.")
 			continue;
+		} else {
+			usersFound = append(usersFound, currentUser);
 		}
     }
 
@@ -159,9 +158,9 @@ func parseResults[d dbModel.DbValue](rows *sql.Rows) []dbModel.DbValue {
 }
 
 func (c Connection) QueryUsers() QueryResult {
-	return userQuery[dbModel.User](c, "SELECT * from users;");
+	return userQuery[*dbModel.User](c, "SELECT * from users;");
 }
 
 func (c Connection) QueryUsersByName(userName string) QueryResult {
-	return userQuery[dbModel.User](c, "SELECT * from users WHERE username = $1;", userName);
+	return userQuery[*dbModel.User](c, "SELECT * from users WHERE username = $1;", userName);
 }

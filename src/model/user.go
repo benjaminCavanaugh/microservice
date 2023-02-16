@@ -6,7 +6,7 @@ import (
 )
 
 type DbValue interface {
-	ScanRow(row *sql.Rows, index int, results *[]DbValue) (bool)
+	ScanRow(row *sql.Rows) (bool)
 }
 
 type User struct {
@@ -15,26 +15,25 @@ type User struct {
 	Location string
 }
 
-func (u User) ScanRow(row *sql.Rows, index int, results *[]DbValue) bool {
-	userValue := new(User);
+// func (u User) ScanRow(row *sql.Rows, index int, results *[]DbValue) bool {
+func (u *User) ScanRow(row *sql.Rows) (success bool) {
 	var username, location, dob string
+
 	if scanError := row.Scan(&username, &location, &dob); scanError != nil {
 		fmt.Println("Encountered an error when processing query results.")
 		return false;
 	}
 
 	fmt.Printf("Query Result: {username: %v, date of birth: %v, location: %v}\n", username, location, dob);
+	fmt.Printf("User item before assigning values: {%v}\n", u)
+	fmt.Printf("Actual value of User item: {%v}\n", &u)
 
-	userValue.Username = username;
-	userValue.Location = location;
-	userValue.Dob = dob;
+	u.Username = username;
+	u.Location = location;
+	u.Dob = dob;
 
-	if index >= len(*results) {
-		*results = append(*results, userValue);
-		fmt.Printf("Appending here! The new length of the slice is: %v\n", len(*results))
-	} else {
-		(*results)[index] = userValue;
-	}
+	fmt.Printf("User item after assigning values: {%v}\n", u)
+	fmt.Printf("Actual value of User item: {%v}\n", &u)
 
 	return true;
 }
