@@ -35,7 +35,7 @@ func main() {
 	// Connect to the database.
 
 	databaseConfig := serviceConfig.GetDatabaseConfig()
-	fmt.Printf("Database config:\n%v\n", databaseConfig);
+	fmt.Printf("Database config:\n%v\n\n\n", databaseConfig);
 
 	// FIXME: Make this use the values read-in from the DatabaseConfig instead of hard-coding them here.
 	databaseConfig.Host= "localhost"
@@ -57,7 +57,7 @@ func main() {
 	// set up the service from config
 
 	htmlServerConfig := serviceConfig.GetHtmlServerConfig()
-	fmt.Printf("Server config:\n%v\n", htmlServerConfig);
+	fmt.Printf("\n\nServer config:\n%v\n", htmlServerConfig);
 
 	// FIXME: Make this use the values read-in from the HtmlServerConfig instead of hard-coding them here.
 	address := "localhost:3333"

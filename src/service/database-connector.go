@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	configuration "microservice/src/config"
+	dbModel "microservice/src/model"
 
 	// Bringing this in for the drivers.
 	_ "github.com/lib/pq"
@@ -70,7 +71,7 @@ func (q QueryResult) String() string {
 	return string(b)
 }
 
-func (c Connection) userQuery(queryString string, queryParams ... string) QueryResult {
+func userQuery[d dbModel.DbValue](c Connection, queryString string, queryParams ... string) QueryResult {
 	var results QueryResult
 	results.Success = true;
 	var rows *sql.Rows
@@ -101,31 +102,66 @@ func (c Connection) userQuery(queryString string, queryParams ... string) QueryR
 	defer rows.Close()
 
 	results.Message = "users";
+	usersFound := parseResults[d](rows)
 
-	// Loop through rows, using Scan to assign column data to struct fields.
-    for rows.Next() {
-		var username, location, dateOfBirth string
-
-		if scanError := rows.Scan(&username, &location, &dateOfBirth); scanError != nil {
-			results.Values = append(results.Values, "Encountered an error when processing query results.")
-			continue;
-        }
-
-		results.Values = append(results.Values, fmt.Sprintf("username: %v, date of birth: %v, location: %v", username, location, dateOfBirth))
-    }
-
-	if rowError := rows.Err(); rowError != nil {
+	if usersFound == nil || len(usersFound) <= 0 {
 		results.Success = false;
 		results.Message = "Error processing query results."
-    }
+	}
 
+	for index, currentPointer := range usersFound {
+		fmt.Printf("\nusersFoundIndex: %v\n", index);
+
+		// Here we are using a type assertion to convert currentResult back into a User.
+		currentResult, ok := currentPointer.(*dbModel.User);
+
+		fmt.Printf("Current value before conversion: %v\nCurrent value after conversion: %v\nConversion was successful:%v\n",
+			currentPointer, currentResult, ok);
+
+		if ok {
+			results.Values = append(results.Values, fmt.Sprintf("username: %v, date of birth: %v, location: %v",
+				currentResult.Username, currentResult.Location, currentResult.Dob))
+		} else {
+			// TODO: Convert this to use the generic type's name.
+			fmt.Printf("Error. Failed to convert result %v to the type %v\n", currentPointer, "d")
+		}
+	}
+	
 	return results;
 }
 
+//func parseResults[d dbModel.DbValue](rows *sql.Rows) []d {
+func parseResults[d dbModel.DbValue](rows *sql.Rows) []dbModel.DbValue {
+	usersFound := make([]dbModel.DbValue, 0);
+	index := 0;
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+    for rows.Next() {
+		var currentUser d;
+		success := currentUser.ScanRow(rows, index, &usersFound);
+
+		fmt.Printf("The query was successful: %v\n", success);
+		fmt.Printf("The length of the slice is: %v\n", len(usersFound));
+		fmt.Printf("The current user returned by the query is: %v\n", usersFound[index]);
+		index++;
+
+		if success == false {
+			fmt.Println("Encountered an error when processing query results.")
+			continue;
+		}
+    }
+
+	if rowError := rows.Err(); rowError != nil {
+		fmt.Println("Error processing query results.");
+    }
+
+	return usersFound;
+}
+
 func (c Connection) QueryUsers() QueryResult {
-	return c.userQuery("SELECT * from users;");
+	return userQuery[dbModel.User](c, "SELECT * from users;");
 }
 
 func (c Connection) QueryUsersByName(userName string) QueryResult {
-	return c.userQuery("SELECT * from users WHERE username = $1;", userName);
+	return userQuery[dbModel.User](c, "SELECT * from users WHERE username = $1;", userName);
 }
